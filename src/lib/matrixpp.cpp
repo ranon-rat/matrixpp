@@ -284,3 +284,20 @@ Matrix Matrix::stressen_dot(Matrix &m)
     }
     return product_matrix.slice(0, new_height, 0, new_width);
 }
+
+Matrix Matrix::operator*(float scalar){
+    return this->iter_through_matrix([scalar](float x, float y)
+                                     { return x * scalar; }, *this);
+}
+Matrix Matrix::operator /(float scalar){
+    return this -> iter_through_matrix([scalar](float x, float y)
+                                     { return x / scalar; }, *this);
+};
+Matrix Matrix::operator+(float scalar){
+    return this->iter_through_matrix([scalar](float x, float y)
+                                     { return x + scalar; }, *this);
+}
+Matrix Matrix::operator-(float scalar){
+    return this->iter_through_matrix([scalar](float x, float y)
+                                     { return x - scalar; }, *this);
+}

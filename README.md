@@ -1,4 +1,4 @@
-# MatrixCPP
+# Matrixpp
 
 its a simple library that i developed to learn more about matrices,
 I also used this to learn more about c++ and how it works.

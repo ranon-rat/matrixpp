@@ -62,7 +62,12 @@ public:
     Matrix &operator=(const Matrix &other);
     Matrix operator+(Matrix &m);
     Matrix operator-(Matrix &m);
+    Matrix operator*(float scalar);
+    Matrix operator /(float scalar);
+    Matrix operator+(float scalar);
+    Matrix operator-(float scalar);
     Matrix operator*(Matrix &m);
+
 
     friend std::ostream &operator<<(std::ostream &os, Matrix m);
 
