@@ -2,6 +2,8 @@
 #include <functional>
 #include <iomanip>
 #include <tuple>
+#include <future>
+
 #include "matrixpp.h++"
 
 Matrix::Matrix(int h, int w)
@@ -52,7 +54,7 @@ void Matrix::fill_rand()
     }
 }
 
-Matrix Matrix::transpose()
+Matrix Matrix::transpose() const
 {
     Matrix m(this->width, this->height);
     for (int i = 0; i < this->height; i++)
@@ -65,8 +67,7 @@ Matrix Matrix::transpose()
     return m;
 }
 
-
-Matrix Matrix::padding(int h_pad, int w_pad)
+Matrix Matrix::padding(int h_pad, int w_pad) const
 {
 
     Matrix m(this->height + h_pad, this->width + w_pad);
@@ -81,74 +82,12 @@ Matrix Matrix::padding(int h_pad, int w_pad)
 }
 
 // stressen algorithm mfs i will kill you
-Matrix Matrix::dot(Matrix &m)
-{
-    return this->stressen_dot(m);
-}
-Matrix &Matrix::operator=(const Matrix &other)
-{
-    if (this != &other)
-    {
-
-        this->delete_data();
-        // Copiar nuevas dimensiones
-        this->height = other.height;
-        this->width = other.width;
-        this->data = new float *[height];
-        for (int i = 0; i < height; i++)
-        {
-            this->data[i] = new float[width]{0};
-            for (int j = 0; j < width; j++)
-            {
-                this->data[i][j] = other.data[i][j]; // Copia profunda
-            }
-        }
-    }
-    return *this;
-}
-Matrix Matrix::operator*(float scalar)
-{
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x * scalar; }, *this);
-}
-Matrix Matrix::operator/(float scalar)
-{
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x / scalar; }, *this);
-};
-Matrix Matrix::operator+(float scalar)
-{
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x + scalar; }, *this);
-}
-Matrix Matrix::operator-(float scalar)
-{
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x - scalar; }, *this);
-}
-Matrix Matrix::operator+(Matrix &m)
-{
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x + y; }, m);
-}
-Matrix Matrix::operator-(Matrix &m)
-{
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x - y; }, m);
-}
-Matrix Matrix::operator*(Matrix &m)
+Matrix Matrix::dot(Matrix &m) const
 {
     return this->stressen_dot(m);
 }
 
-
-std::ostream &operator<<(std::ostream &os, Matrix m)
-{
-    m.show(os);
-    return os;
-}
-
-Matrix Matrix::slice(int y1, int y2, int x1, int x2)
+Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
 {
     if (y1 < 0 || y1 > y2 || y2 > this->height || x1 < 0 || x1 > x2 || x2 > this->width)
     {
@@ -167,9 +106,7 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2)
     return m;
 }
 
-
-
-Matrix Matrix::brute_force_dot(Matrix &m)
+Matrix Matrix::brute_force_dot(const Matrix &m) const
 {
     if (this->width != m.height)
     {
@@ -191,44 +128,60 @@ Matrix Matrix::brute_force_dot(Matrix &m)
     return new_matrix;
 }
 
-
-Matrix Matrix::stressen_dot(Matrix &m)
+Matrix Matrix::stressen_dot(const Matrix &m) const
 { // in case the matrix is too small we can just use brute force
-    if (this->height <= 2 || this->width <= 2)
+    if (this->height <= 2 || this->width <=2)
     {
         return this->brute_force_dot(m);
+    }
+    if (this->width != m.height)
+    {
+        throw "Invalid matrix dimensions";
     }
     const int new_height = this->height;
     const int new_width = m.width;
     // this is for the product matrix that we are gonna be using
     const int padding_height = new_height + (new_height % 2 == 0 ? 0 : 1);
     const int padding_width = new_width + (new_width % 2 == 0 ? 0 : 1);
+
+    // we will be using this for the result :D
     Matrix product_matrix(padding_height, padding_width);
     // in case our matrices is not divisible by 2 we need to pad it
     auto dot_matrix1 = this->padding(this->height % 2 == 0 ? 0 : 1, this->width % 2 == 0 ? 0 : 1);
     auto dot_matrix2 = m.padding(m.height % 2 == 0 ? 0 : 1, m.width % 2 == 0 ? 0 : 1);
     // first we need to divide the matrix into 4 parts
-    auto [a, b, c, d] = dot_matrix1.stressen_split();
-    auto [e, f, g, h] = dot_matrix2.stressen_split();
+  
+    auto [a11, a12, a21, a22] = dot_matrix1.stressen_split();
+    auto [b11, b12, b21, b22] = dot_matrix2.stressen_split();
+   
     // then we need to calculate the 7 products
-    auto ae = a.stressen_dot(e);
-    auto bg = b.stressen_dot(g);
-    auto af = a.stressen_dot(f);
-    auto bh = b.stressen_dot(h);
-    auto ce = c.stressen_dot(e);
-    auto dg = d.stressen_dot(g);
-    auto cf = c.stressen_dot(f);
-    auto dh = d.stressen_dot(h);
+    std::future<Matrix> p1_fut=std::async(std::launch::async,[&a11,&a22,&b11,&b22]()->Matrix{return (a11 + a22)*(b11 + b22);});
+    std::future<Matrix> p2_fut=std::async(std::launch::async,[&a21,&a22,&b11]()->Matrix{return ( a21+a22)*b11;});
+    std::future<Matrix> p3_fut=std::async(std::launch::async,[&a11,&b12,&b22]()->Matrix{return a11*(b12 - b22);});
+    std::future<Matrix> p4_fut=std::async(std::launch::async,[&a22,&b21,&b11]()->Matrix{return a22*(b21 - b11);});
+    std::future<Matrix> p5_fut=std::async(std::launch::async,[&a11,&a12,&b22]()->Matrix{return (a11 + a12)*b22;});
+    std::future<Matrix> p6_fut=std::async(std::launch::async,[&a21,&a11,&b11,b21]()->Matrix{return (a21 - a11)*(b11 + b21);});
+    std::future<Matrix> p7_fut=std::async(std::launch::async,[&a12,&a22,&b21,b22]()->Matrix{return (a12 - a22)*(b21 + b22);});
+    
+   
+    // then we get the values that we want
+    Matrix p1 = p1_fut.get();
+    Matrix p2 = p2_fut.get();
+    Matrix p3 = p3_fut.get();
+    Matrix p4 = p4_fut.get();
+    Matrix p5 = p5_fut.get();
+    Matrix p6 = p6_fut.get();
+    Matrix p7 = p7_fut.get();
     // then we need to calculate the 4 additions
-    // a*e+b*g
 
-    Matrix c11 = ae + bg;
+    // a*e+b*g
+    Matrix c11 = p1 +p4- p5 + p7;
     // a*f+b*h
-    Matrix c12 = af + bh;
+    Matrix c12 = p3+p5;
     // c*e+d*g
-    Matrix c21 = ce + dg;
+    Matrix c21 = p2+p4;
     // c*f+d*h
-    Matrix c22 = cf + dh;
+    Matrix c22 = p1 - p2 + p3 + p6;
     // then we need to merge the 4 parts into the final matrix
     const int half_height = padding_height / 2;
     const int half_width = padding_width / 2;
@@ -263,28 +216,7 @@ Matrix Matrix::stressen_dot(Matrix &m)
 }
 
 
-
-Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, Matrix &m2)
-{
-    if (this->height != m2.height || this->width != m2.width)
-    {
-
-        throw "Matrix dimensions must be equal";
-    }
-
-    Matrix new_matrix(this->height, this->width); // Asignar la memoria para la nueva matriz
-
-    for (int i = 0; i < this->height; i++)
-    {
-        for (int j = 0; j < this->width; j++)
-        {
-            new_matrix.data[i][j] = f(this->get(i, j), m2.get(i, j));
-        }
-    }
-
-    return new_matrix; // Regresar la nueva matriz con los resultados
-}
-std::tuple<Matrix, Matrix, Matrix, Matrix> Matrix::stressen_split()
+std::tuple<Matrix, Matrix, Matrix, Matrix> Matrix::stressen_split()  const
 {
     if (this->height % 2 != 0 || this->width % 2 != 0)
     {

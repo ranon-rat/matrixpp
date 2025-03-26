@@ -19,7 +19,11 @@ public:
 
     ~Matrix()
     {
-        this->delete_data();
+        for (int j = 0; j < this->height; j++)
+        {
+            delete[] this->data[j];
+        }
+        delete[] this->data;
     };
     void delete_data();
     Matrix randomized(int h, int w);
@@ -42,36 +46,36 @@ public:
     {
         this->show(std::cout);
     };
-    float get(int y, int x)
+    float get(int y, int x) const
     {
         return this->data[y][x];
     }
-    Matrix brute_force_dot(Matrix &m);
-    Matrix stressen_dot(Matrix &m);
-    Matrix copy_from(Matrix &m);
-    Matrix slice(int y1, int y2, int x1, int x2);
+    Matrix brute_force_dot(const Matrix &m) const;
+    Matrix stressen_dot(const Matrix &m) const;
+    Matrix slice(int y1, int y2, int x1, int x2) const;
     // this will add a new column or row depending of what you want :)
-    Matrix padding(int h_pad, int w_pad);
-    Matrix dot(Matrix &m);
-    Matrix transpose();
-    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split();
+    Matrix padding(int h_pad, int w_pad) const;
+    Matrix dot(Matrix &m) const;
+    Matrix transpose() const;
+    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split() const;
 
 public:
-    Matrix operator*(float scalar);
-    Matrix operator/(float scalar);
-    Matrix operator+(float scalar);
-    Matrix operator-(float scalar);
-    Matrix &operator=(const Matrix &other);
-    Matrix operator+(Matrix &m);
-    Matrix operator-(Matrix &m);
+    // scalars
+    Matrix operator*(const float scalar) const;
+    Matrix operator/(const float scalar) const;
+    Matrix operator+(const float scalar) const;
+    Matrix operator-(const float scalar) const;
 
-    Matrix operator*(Matrix &m);
+    Matrix &operator=(const Matrix &other);
+    // matrix operations
+    Matrix operator+(const Matrix &m) const;
+    Matrix operator-(const Matrix &m) const;
+    Matrix operator*(const Matrix &m) const;
 
     friend std::ostream &operator<<(std::ostream &os, Matrix m);
 
 private:
-    Matrix iter_through_matrix(std::function<float(float x, float y)> f, Matrix &m2);
-    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split(Matrix &m);
+    Matrix iter_through_matrix(std::function<float(float x, float y)> f, const Matrix &m2) const;
 };
 
 #endif

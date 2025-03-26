@@ -1,23 +1,30 @@
 #include <iostream>
+#include <chrono>
+
 #include "matrixpp.h++"
-void a();
+
 int main()
 {
 
-    Matrix m(3, 3);
+    
+    Matrix m(200, 200);
     m.  fill_rand();
     Matrix m2t=m.transpose();
-    std::cout<<m<<"\n";
-    std::cout<<m2t<<"\n";
-    Matrix subtraction=m-m2t;
-    Matrix addition=m+m2t;
+
+ 
+    
+    auto initial_t=std::chrono::high_resolution_clock::now();
     Matrix multiplication_brute=m.brute_force_dot(m2t);
+    auto final_t=std::chrono::high_resolution_clock::now();
+    
+    std::cout<<"Time for brute force:"<<  final_t-initial_t<<"\n";
+    
+    auto initial_t2=std::chrono::high_resolution_clock::now();
     Matrix multiplication_stressen=m.stressen_dot(m2t);
-    std::cout<<"m*m2 brute\n"<<(multiplication_brute)<<"\n";
-    std::cout<<"m*m2 stressen\n"<<(multiplication_stressen)<<"\n";
-    // normal
-    std::cout<<"m*m2 "<<(m*m2t)<<"\n";
-    std::cout<<"m+m2 "<<(addition)<<"\n";
-    std::cout<<"m-m2 "<<(subtraction)<<"\n";
+    auto final_t2=std::chrono::high_resolution_clock::now();
+
+
+    std::cout<<"Time for stressen: "<<final_t2-initial_t2<<"\n";
+   
     return 0;
 }
