@@ -17,7 +17,6 @@ int main()
     std::cout<<"m*m2 stressen\n"<<(multiplication_stressen)<<"\n";
     // normal
     std::cout<<"m*m2 "<<(m*m2t)<<"\n";
-
     std::cout<<"m+m2 "<<(addition)<<"\n";
     std::cout<<"m-m2 "<<(subtraction)<<"\n";
     return 0;

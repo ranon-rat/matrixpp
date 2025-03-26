@@ -64,37 +64,20 @@ Matrix Matrix::transpose()
     }
     return m;
 }
-Matrix Matrix::transpose(Matrix m)
+
+
+Matrix Matrix::padding(int h_pad, int w_pad)
 {
-    Matrix m2(m.width, m.height);
-    for (int i = 0; i < m.height; i++)
-    {
-        for (int j = 0; j < m.width; j++)
-        {
-            m2.data[j][i] = m.data[i][j];
-        }
-    }
-    return m2;
-}
-Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, Matrix &m2)
-{
-    if (this->height != m2.height || this->width != m2.width)
-    {
 
-        throw "Matrix dimensions must be equal";
-    }
-
-    Matrix new_matrix(this->height, this->width); // Asignar la memoria para la nueva matriz
-
+    Matrix m(this->height + h_pad, this->width + w_pad);
     for (int i = 0; i < this->height; i++)
     {
         for (int j = 0; j < this->width; j++)
         {
-            new_matrix.data[i][j] = f(this->get(i, j), m2.get(i, j));
+            m.data[i][j] = this->data[i][j];
         }
     }
-
-    return new_matrix; // Regresar la nueva matriz con los resultados
+    return m;
 }
 
 // stressen algorithm mfs i will kill you
@@ -102,21 +85,6 @@ Matrix Matrix::dot(Matrix &m)
 {
     return this->stressen_dot(m);
 }
-Matrix Matrix::operator+(Matrix &m)
-{
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x + y; }, m);
-}
-Matrix Matrix::operator-(Matrix &m)
-{
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x - y; }, m);
-}
-Matrix Matrix::operator*(Matrix &m)
-{
-    return this->stressen_dot(m);
-}
-
 Matrix &Matrix::operator=(const Matrix &other)
 {
     if (this != &other)
@@ -138,6 +106,42 @@ Matrix &Matrix::operator=(const Matrix &other)
     }
     return *this;
 }
+Matrix Matrix::operator*(float scalar)
+{
+    return this->iter_through_matrix([scalar](float x, float)
+                                     { return x * scalar; }, *this);
+}
+Matrix Matrix::operator/(float scalar)
+{
+    return this->iter_through_matrix([scalar](float x, float)
+                                     { return x / scalar; }, *this);
+};
+Matrix Matrix::operator+(float scalar)
+{
+    return this->iter_through_matrix([scalar](float x, float)
+                                     { return x + scalar; }, *this);
+}
+Matrix Matrix::operator-(float scalar)
+{
+    return this->iter_through_matrix([scalar](float x, float)
+                                     { return x - scalar; }, *this);
+}
+Matrix Matrix::operator+(Matrix &m)
+{
+    return this->iter_through_matrix([](float x, float y)
+                                     { return x + y; }, m);
+}
+Matrix Matrix::operator-(Matrix &m)
+{
+    return this->iter_through_matrix([](float x, float y)
+                                     { return x - y; }, m);
+}
+Matrix Matrix::operator*(Matrix &m)
+{
+    return this->stressen_dot(m);
+}
+
+
 std::ostream &operator<<(std::ostream &os, Matrix m)
 {
     m.show(os);
@@ -163,20 +167,7 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2)
     return m;
 }
 
-// this will
-Matrix Matrix::padding(int h_pad, int w_pad)
-{
 
-    Matrix m(this->height + h_pad, this->width + w_pad);
-    for (int i = 0; i < this->height; i++)
-    {
-        for (int j = 0; j < this->width; j++)
-        {
-            m.data[i][j] = this->data[i][j];
-        }
-    }
-    return m;
-}
 
 Matrix Matrix::brute_force_dot(Matrix &m)
 {
@@ -200,22 +191,9 @@ Matrix Matrix::brute_force_dot(Matrix &m)
     return new_matrix;
 }
 
-std::tuple<Matrix, Matrix, Matrix, Matrix> Matrix::stressen_split()
-{
-    if (this->height % 2 != 0 || this->width % 2 != 0)
-    {
-        throw "Invalid matrix dimensions";
-    }
-    const int half_height = this->height / 2;
-    const int half_width = this->width / 2;
-    Matrix a = this->slice(0, half_height, 0, half_width);
-    Matrix b = this->slice(0, half_height, half_width, this->width);
-    Matrix c = this->slice(half_height, this->height, 0, half_width);
-    Matrix d = this->slice(half_height, this->height, half_width, this->width);
-    return {a, b, c, d};
-}
+
 Matrix Matrix::stressen_dot(Matrix &m)
-{   // in case the matrix is too small we can just use brute force
+{ // in case the matrix is too small we can just use brute force
     if (this->height <= 2 || this->width <= 2)
     {
         return this->brute_force_dot(m);
@@ -280,24 +258,43 @@ Matrix Matrix::stressen_dot(Matrix &m)
                 product_matrix.data[i][j] = c22.data[i - half_height][j - half_width];
             }
         }
-    
     }
     return product_matrix.slice(0, new_height, 0, new_width);
 }
 
-Matrix Matrix::operator*(float scalar){
-    return this->iter_through_matrix([scalar](float x, float y)
-                                     { return x * scalar; }, *this);
+
+
+Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, Matrix &m2)
+{
+    if (this->height != m2.height || this->width != m2.width)
+    {
+
+        throw "Matrix dimensions must be equal";
+    }
+
+    Matrix new_matrix(this->height, this->width); // Asignar la memoria para la nueva matriz
+
+    for (int i = 0; i < this->height; i++)
+    {
+        for (int j = 0; j < this->width; j++)
+        {
+            new_matrix.data[i][j] = f(this->get(i, j), m2.get(i, j));
+        }
+    }
+
+    return new_matrix; // Regresar la nueva matriz con los resultados
 }
-Matrix Matrix::operator /(float scalar){
-    return this -> iter_through_matrix([scalar](float x, float y)
-                                     { return x / scalar; }, *this);
-};
-Matrix Matrix::operator+(float scalar){
-    return this->iter_through_matrix([scalar](float x, float y)
-                                     { return x + scalar; }, *this);
-}
-Matrix Matrix::operator-(float scalar){
-    return this->iter_through_matrix([scalar](float x, float y)
-                                     { return x - scalar; }, *this);
+std::tuple<Matrix, Matrix, Matrix, Matrix> Matrix::stressen_split()
+{
+    if (this->height % 2 != 0 || this->width % 2 != 0)
+    {
+        throw "Invalid matrix dimensions";
+    }
+    const int half_height = this->height / 2;
+    const int half_width = this->width / 2;
+    Matrix a = this->slice(0, half_height, 0, half_width);
+    Matrix b = this->slice(0, half_height, half_width, this->width);
+    Matrix c = this->slice(half_height, this->height, 0, half_width);
+    Matrix d = this->slice(half_height, this->height, half_width, this->width);
+    return {a, b, c, d};
 }

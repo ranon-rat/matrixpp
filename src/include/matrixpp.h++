@@ -35,7 +35,7 @@ public:
             }
             os << "\n";
         }
-        os<<"\n";
+        os << "\n";
         return os;
     }
     void show()
@@ -48,33 +48,30 @@ public:
     }
     Matrix brute_force_dot(Matrix &m);
     Matrix stressen_dot(Matrix &m);
-    Matrix copy_from(Matrix &m);    
+    Matrix copy_from(Matrix &m);
     Matrix slice(int y1, int y2, int x1, int x2);
     // this will add a new column or row depending of what you want :)
-    Matrix padding(int h_pad,int w_pad);
+    Matrix padding(int h_pad, int w_pad);
     Matrix dot(Matrix &m);
     Matrix transpose();
-    Matrix transpose(Matrix m);
-    std::tuple<Matrix,Matrix,Matrix,Matrix> stressen_split();
-
+    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split();
 
 public:
+    Matrix operator*(float scalar);
+    Matrix operator/(float scalar);
+    Matrix operator+(float scalar);
+    Matrix operator-(float scalar);
     Matrix &operator=(const Matrix &other);
     Matrix operator+(Matrix &m);
     Matrix operator-(Matrix &m);
-    Matrix operator*(float scalar);
-    Matrix operator /(float scalar);
-    Matrix operator+(float scalar);
-    Matrix operator-(float scalar);
-    Matrix operator*(Matrix &m);
 
+    Matrix operator*(Matrix &m);
 
     friend std::ostream &operator<<(std::ostream &os, Matrix m);
 
 private:
     Matrix iter_through_matrix(std::function<float(float x, float y)> f, Matrix &m2);
-    std::tuple<Matrix,Matrix,Matrix,Matrix> stressen_split(Matrix &m);
-    
+    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split(Matrix &m);
 };
 
 #endif
