@@ -24,6 +24,7 @@
     (a21) = (matrix).slice((half_height), (matrix).height, 0, (half_width));\
     (a22) = (matrix).slice((half_height), (matrix).height, (half_width), (matrix).width);\
     \
+    
 
 class Matrix
 {
@@ -72,13 +73,16 @@ public:
         return this->data[y][x];
     }
 
-   Matrix brute_force_dot(const Matrix &m) const;
-    Matrix stressen_dot(const Matrix &m) const;
+   
     Matrix slice(int y1, int y2, int x1, int x2) const;
     // this will add a new column or row depending of what you want :)
-    inline constexpr Matrix padding(int h_pad, int w_pad) const;
-    Matrix dot(Matrix &m) const;
+     Matrix padding(int h_pad, int w_pad) const; 
     Matrix transpose() const;
+    // so these are matrix multiplication functions
+     Matrix brute_force_dot(const Matrix &m) const;
+    Matrix stressen_dot(const Matrix &m) const;
+    Matrix dot(Matrix &m) const;
+    float sum() const;
 
 public:
     bool operator==(const Matrix &m) const;
@@ -95,11 +99,10 @@ public:
     Matrix operator+(const Matrix &m) const;
     Matrix operator-(const Matrix &m) const;
     Matrix operator*(const Matrix &m) const;
-
+    // some extra functions :)
+    Matrix iter_through_matrix(std::function<float(float x, float y)> f, const Matrix &m2) const;
     friend std::ostream &operator<<(std::ostream &os, Matrix m);
 
-private:
-    Matrix iter_through_matrix(std::function<float(float x, float y)> f, const Matrix &m2) const;
 };
 
 #endif

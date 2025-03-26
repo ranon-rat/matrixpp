@@ -2,6 +2,11 @@
 #include <chrono>
 #include <vector>
 #include "matrixpp.h++"
+std::chrono::milliseconds now(){
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now().time_since_epoch()
+    );
+}
 void a()
 {
     std::vector<int> dimensions = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192};
@@ -12,23 +17,33 @@ void a()
         m.fill_rand();
         Matrix m2t = m.transpose();
 
-        auto initial_t = std::chrono::high_resolution_clock::now();
+        auto initial_t = now();
         Matrix multiplication_brute = m.brute_force_dot(m2t);
-        auto final_t = std::chrono::high_resolution_clock::now();
-        auto brute_force_time=static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(final_t - initial_t).count());
+        auto final_t = now();
+        auto brute_force_time = static_cast<int>((final_t - initial_t).count());
         std::cout << "Time for brute force:" << final_t - initial_t << "\n";
-        auto initial_t2 = std::chrono::high_resolution_clock::now();
+        auto initial_t2 = now();
         Matrix multiplication_stressen = m.stressen_dot(m2t);
-        auto final_t2 = std::chrono::high_resolution_clock::now();
-        auto stressen_time=static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(final_t2 - initial_t2).count());
-
+        auto final_t2 = now();
+        auto stressen_time = static_cast<int>((final_t2 - initial_t2).count());
         std::cout << "Time for stressen:   " << final_t2 - initial_t2 << "\n";
-        std::cout<<"strassen/brute force: "<<(stressen_time)/(brute_force_time*1.0+0.1)<<"\n\n";
+        std::cout << "sum brute force: " << multiplication_brute.sum() << "\n";
+        std::cout<<"sum stressen: "<< multiplication_stressen.sum()<<"\n";
+    std::cout<<"difference: "<< multiplication_brute.sum()-multiplication_stressen.sum()<<"\n";
+        std::cout << "strassen/brute force: " << (stressen_time) / (brute_force_time * 1.0 + 0.1) << "\n\n";
     }
     std::cin.get();
 }
 int main()
 {
+
+    Matrix m(3, 2);
+    m.fill_rand();
+    Matrix m2(2, 3);
+    m2.fill_rand();
+    Matrix m3 = m.stressen_dot(m2);
+    std::cout << m.stressen_dot(m2);
+    std::cout << m.brute_force_dot(m2);
 
     a();
 

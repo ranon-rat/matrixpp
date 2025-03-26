@@ -70,7 +70,7 @@ Matrix Matrix::transpose() const
     return m;
 }
 
-inline constexpr Matrix Matrix::padding(int h_pad, int w_pad) const
+Matrix Matrix::padding(int h_pad, int w_pad) const
 {
     if (h_pad < 0 || w_pad < 0)
     {
@@ -90,7 +90,18 @@ inline constexpr Matrix Matrix::padding(int h_pad, int w_pad) const
     }
     return m;
 }
-
+float Matrix::sum() const
+{
+    float sum = 0;
+    for (int i = 0; i < this->height; i++)
+    {
+        for (int j = 0; j < this->width; j++)
+        {
+            sum += this->data[i][j];
+        }
+    }
+    return sum;
+}
 // stressen algorithm mfs i will kill you
 Matrix Matrix::dot(Matrix &m) const
 {
@@ -116,11 +127,11 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
     return m;
 }
 
- Matrix Matrix::brute_force_dot(const Matrix &m) const
+Matrix Matrix::brute_force_dot(const Matrix &m) const
 {
     if (this->width != m.height)
     {
-        std::cout<<"brute force"<<"\n"; 
+        std::cout << "brute force" << "\n";
         throw "Invalid matrix dimensions";
     }
     Matrix new_matrix(this->height, m.width);
@@ -139,9 +150,10 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
     return new_matrix;
 }
 
- Matrix Matrix::stressen_dot(const Matrix &m) const
-{ // in case the matrix is too small we can just use brute force
-    if (this->height <= 128 || this->width <= 128)
+Matrix Matrix::stressen_dot(const Matrix &m) const
+{
+    // in case the matrix is too small we can just use brute force
+    if (this->height <= 256 || this->width <= 256)
     {
         return this->brute_force_dot(m);
     }
@@ -162,26 +174,40 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
     auto dot_matrix1 = this->padding(this->height % 2 == 0 ? 0 : 1, this->width % 2 == 0 ? 0 : 1);
     auto dot_matrix2 = m.padding(m.height % 2 == 0 ? 0 : 1, m.width % 2 == 0 ? 0 : 1);
     // first we need to divide the matrix into 4 parts
-    Matrix a11(0,0), a12(0,0), a21(0,0), a22(0,0);
-    Matrix b11(0,0), b12(0,0), b21(0,0), b22(0,0);
+    Matrix a11(0, 0), a12(0, 0), a21(0, 0), a22(0, 0);
+    Matrix b11(0, 0), b12(0, 0), b21(0, 0), b22(0, 0);
 
+    int half_width_M = dot_matrix1.width / 2;
+    int half_height_M = dot_matrix1.height / 2;
+    STRASSEN_SPLIT(a11, a12, a21, a22, dot_matrix1, half_height_M, half_width_M);
+    half_width_M = dot_matrix2.width / 2;
 
-    int half_width_M=dot_matrix1.width/2;
-    int half_height_M=dot_matrix1.height/2;
-    STRASSEN_SPLIT(a11,a12,a21,a22,dot_matrix1,half_height_M,half_width_M);
-    half_width_M=dot_matrix2.width/2;
-
-    half_height_M=dot_matrix2.height/2;
-    STRASSEN_SPLIT(b11,b12,b21,b22,dot_matrix2,half_height_M,half_width_M);
+    half_height_M = dot_matrix2.height / 2;
+    STRASSEN_SPLIT(b11, b12, b21, b22, dot_matrix2, half_height_M, half_width_M);
 
     // then we need to calculate the 7 products
-    Matrix p1 = (a11 + a22) * (b11 + b22);
-    Matrix p2 = (a21 + a22) * b11;
-    Matrix p3 = a11 * (b12 - b22);
-    Matrix p4 = a22 * (b21 - b11);
-    Matrix p5 = (a11 + a12) * b22;
-    Matrix p6 = (a21 - a11) * (b11 + b21);
-    Matrix p7 = (a12 - a22) * (b21 + b22);
+    std::future<Matrix> p1_fut = std::async(std::launch::async, [&a11, &a22, &b11, &b22]()
+                                            { return (a11 + a22) * (b11 + b22); });
+    std::future<Matrix> p2_fut = std::async(std::launch::async, [&a21, &a22, &b11]()
+                                            { return (a21 + a22) * b11; });
+    std::future<Matrix> p3_fut = std::async(std::launch::async, [&a11, &b12, &b22]()
+                                            { return a11 * (b12 - b22); });
+    std::future<Matrix> p4_fut = std::async(std::launch::async, [&a22, &b21, &b11]()
+                                            { return a22 * (b21 - b11); });
+    std::future<Matrix> p5_fut = std::async(std::launch::async, [&a11, &a12, &b22]()
+                                            { return (a11 + a12) * b22; });
+    std::future<Matrix> p6_fut = std::async(std::launch::async, [&a21, &a11, &b11, &b21]()
+                                            { return (a21 - a11) * (b11 + b21); });
+    std::future<Matrix> p7_fut = std::async(std::launch::async, [&a12, &a22, &b21, &b22]()
+                                            { return (a12 - a22) * (b21 + b22); });
+
+    Matrix p1 = p1_fut.get();
+    Matrix p2 = p2_fut.get();
+    Matrix p3 = p3_fut.get();
+    Matrix p4 = p4_fut.get();
+    Matrix p5 = p5_fut.get();
+    Matrix p6 = p6_fut.get();
+    Matrix p7 = p7_fut.get();
     // then we need to calculate the 4 additions
     // a*e+b*g
     Matrix c11 = p1 + p4 - p5 + p7;
@@ -227,4 +253,3 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
     }
     return product_matrix.slice(0, new_height, 0, new_width);
 }
-
