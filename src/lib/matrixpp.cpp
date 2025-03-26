@@ -28,8 +28,11 @@ Matrix::Matrix(const Matrix &other) : height(other.height), width(other.width)
         }
     }
 }
-void Matrix::delete_data()
+void Matrix::delete_data(std::string message)
 {
+
+    std::cout << "deleting data from\n"
+              << message << std::endl;
     for (int j = 0; j < this->height; j++)
     {
         delete[] this->data[j];
@@ -67,9 +70,16 @@ Matrix Matrix::transpose() const
     return m;
 }
 
-Matrix Matrix::padding(int h_pad, int w_pad) const
+inline constexpr Matrix Matrix::padding(int h_pad, int w_pad) const
 {
-
+    if (h_pad < 0 || w_pad < 0)
+    {
+        throw "Invalid padding";
+    }
+    if (h_pad == 0 && w_pad == 0)
+    {
+        return *this;
+    }
     Matrix m(this->height + h_pad, this->width + w_pad);
     for (int i = 0; i < this->height; i++)
     {
@@ -106,10 +116,11 @@ Matrix Matrix::slice(int y1, int y2, int x1, int x2) const
     return m;
 }
 
-Matrix Matrix::brute_force_dot(const Matrix &m) const
+ Matrix Matrix::brute_force_dot(const Matrix &m) const
 {
     if (this->width != m.height)
     {
+        std::cout<<"brute force"<<"\n"; 
         throw "Invalid matrix dimensions";
     }
     Matrix new_matrix(this->height, m.width);
@@ -128,9 +139,9 @@ Matrix Matrix::brute_force_dot(const Matrix &m) const
     return new_matrix;
 }
 
-Matrix Matrix::stressen_dot(const Matrix &m) const
+ Matrix Matrix::stressen_dot(const Matrix &m) const
 { // in case the matrix is too small we can just use brute force
-    if (this->height <= 2 || this->width <=2)
+    if (this->height <= 128 || this->width <= 128)
     {
         return this->brute_force_dot(m);
     }
@@ -141,6 +152,7 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
     const int new_height = this->height;
     const int new_width = m.width;
     // this is for the product matrix that we are gonna be using
+
     const int padding_height = new_height + (new_height % 2 == 0 ? 0 : 1);
     const int padding_width = new_width + (new_width % 2 == 0 ? 0 : 1);
 
@@ -150,36 +162,33 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
     auto dot_matrix1 = this->padding(this->height % 2 == 0 ? 0 : 1, this->width % 2 == 0 ? 0 : 1);
     auto dot_matrix2 = m.padding(m.height % 2 == 0 ? 0 : 1, m.width % 2 == 0 ? 0 : 1);
     // first we need to divide the matrix into 4 parts
-  
-    auto [a11, a12, a21, a22] = dot_matrix1.stressen_split();
-    auto [b11, b12, b21, b22] = dot_matrix2.stressen_split();
-   
-    // then we need to calculate the 7 products
-    std::future<Matrix> p1_fut=std::async(std::launch::async,[&a11,&a22,&b11,&b22]()->Matrix{return (a11 + a22)*(b11 + b22);});
-    std::future<Matrix> p2_fut=std::async(std::launch::async,[&a21,&a22,&b11]()->Matrix{return ( a21+a22)*b11;});
-    std::future<Matrix> p3_fut=std::async(std::launch::async,[&a11,&b12,&b22]()->Matrix{return a11*(b12 - b22);});
-    std::future<Matrix> p4_fut=std::async(std::launch::async,[&a22,&b21,&b11]()->Matrix{return a22*(b21 - b11);});
-    std::future<Matrix> p5_fut=std::async(std::launch::async,[&a11,&a12,&b22]()->Matrix{return (a11 + a12)*b22;});
-    std::future<Matrix> p6_fut=std::async(std::launch::async,[&a21,&a11,&b11,b21]()->Matrix{return (a21 - a11)*(b11 + b21);});
-    std::future<Matrix> p7_fut=std::async(std::launch::async,[&a12,&a22,&b21,b22]()->Matrix{return (a12 - a22)*(b21 + b22);});
-    
-   
-    // then we get the values that we want
-    Matrix p1 = p1_fut.get();
-    Matrix p2 = p2_fut.get();
-    Matrix p3 = p3_fut.get();
-    Matrix p4 = p4_fut.get();
-    Matrix p5 = p5_fut.get();
-    Matrix p6 = p6_fut.get();
-    Matrix p7 = p7_fut.get();
-    // then we need to calculate the 4 additions
+    Matrix a11(0,0), a12(0,0), a21(0,0), a22(0,0);
+    Matrix b11(0,0), b12(0,0), b21(0,0), b22(0,0);
 
+
+    int half_width_M=dot_matrix1.width/2;
+    int half_height_M=dot_matrix1.height/2;
+    STRASSEN_SPLIT(a11,a12,a21,a22,dot_matrix1,half_height_M,half_width_M);
+    half_width_M=dot_matrix2.width/2;
+
+    half_height_M=dot_matrix2.height/2;
+    STRASSEN_SPLIT(b11,b12,b21,b22,dot_matrix2,half_height_M,half_width_M);
+
+    // then we need to calculate the 7 products
+    Matrix p1 = (a11 + a22) * (b11 + b22);
+    Matrix p2 = (a21 + a22) * b11;
+    Matrix p3 = a11 * (b12 - b22);
+    Matrix p4 = a22 * (b21 - b11);
+    Matrix p5 = (a11 + a12) * b22;
+    Matrix p6 = (a21 - a11) * (b11 + b21);
+    Matrix p7 = (a12 - a22) * (b21 + b22);
+    // then we need to calculate the 4 additions
     // a*e+b*g
-    Matrix c11 = p1 +p4- p5 + p7;
+    Matrix c11 = p1 + p4 - p5 + p7;
     // a*f+b*h
-    Matrix c12 = p3+p5;
+    Matrix c12 = p3 + p5;
     // c*e+d*g
-    Matrix c21 = p2+p4;
+    Matrix c21 = p2 + p4;
     // c*f+d*h
     Matrix c22 = p1 - p2 + p3 + p6;
     // then we need to merge the 4 parts into the final matrix
@@ -212,21 +221,10 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
             }
         }
     }
+    if (product_matrix.height == new_height && product_matrix.width == new_width)
+    {
+        return product_matrix;
+    }
     return product_matrix.slice(0, new_height, 0, new_width);
 }
 
-
-std::tuple<Matrix, Matrix, Matrix, Matrix> Matrix::stressen_split()  const
-{
-    if (this->height % 2 != 0 || this->width % 2 != 0)
-    {
-        throw "Invalid matrix dimensions";
-    }
-    const int half_height = this->height / 2;
-    const int half_width = this->width / 2;
-    Matrix a = this->slice(0, half_height, 0, half_width);
-    Matrix b = this->slice(0, half_height, half_width, this->width);
-    Matrix c = this->slice(half_height, this->height, 0, half_width);
-    Matrix d = this->slice(half_height, this->height, half_width, this->width);
-    return {a, b, c, d};
-}

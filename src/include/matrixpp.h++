@@ -6,15 +6,36 @@
 #include <format>
 #include <functional>
 #include <tuple>
+#include <string>
+
+#define ITER_THROUGH_MATRIX(result, A, B, func)                 \
+    for (int i = 0; i < (A).height; i++) {                      \
+        for (int j = 0; j < (A).width; j++) {                   \
+            (result).data[i][j] = (func)((A).get(i, j), (B).get(i, j)); \
+        }                                                       \
+    }                                                           \
+
+#define STRASSEN_SPLIT(a11, a12, a21, a22, matrix, half_height, half_width) \
+    if ((matrix).height % 2 != 0 || (matrix).width % 2 != 0) {              \
+        throw "Invalid matrix dimensions";                                  \
+    }                                                                       \
+    (a11) = (matrix).slice(0, (half_height), 0, (half_width));              \
+    (a12) = (matrix).slice(0, (half_height), (half_width), (matrix).width); \
+    (a21) = (matrix).slice((half_height), (matrix).height, 0, (half_width));\
+    (a22) = (matrix).slice((half_height), (matrix).height, (half_width), (matrix).width);\
+    \
+
 class Matrix
 {
 public:
-    int height;
-    int width;
+    int height=0;
+    int width=0;
     float **data;
 
 public:
+    Matrix(){};
     Matrix(int h, int w);
+    // copy constructor
     Matrix(const Matrix &other);
 
     ~Matrix()
@@ -25,7 +46,7 @@ public:
         }
         delete[] this->data;
     };
-    void delete_data();
+    void delete_data(std::string message);
     Matrix randomized(int h, int w);
     void fill_rand();
     std::ostream &show(std::ostream &os)
@@ -50,23 +71,26 @@ public:
     {
         return this->data[y][x];
     }
-    Matrix brute_force_dot(const Matrix &m) const;
+
+   Matrix brute_force_dot(const Matrix &m) const;
     Matrix stressen_dot(const Matrix &m) const;
     Matrix slice(int y1, int y2, int x1, int x2) const;
     // this will add a new column or row depending of what you want :)
-    Matrix padding(int h_pad, int w_pad) const;
+    inline constexpr Matrix padding(int h_pad, int w_pad) const;
     Matrix dot(Matrix &m) const;
     Matrix transpose() const;
-    std::tuple<Matrix, Matrix, Matrix, Matrix> stressen_split() const;
 
 public:
+    bool operator==(const Matrix &m) const;
+    bool operator!=(const Matrix &m) const;
+    // copying
+    Matrix &operator=(const Matrix &other);
     // scalars
     Matrix operator*(const float scalar) const;
     Matrix operator/(const float scalar) const;
     Matrix operator+(const float scalar) const;
     Matrix operator-(const float scalar) const;
 
-    Matrix &operator=(const Matrix &other);
     // matrix operations
     Matrix operator+(const Matrix &m) const;
     Matrix operator-(const Matrix &m) const;

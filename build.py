@@ -4,7 +4,7 @@ dir_path =mmake.get_dir(__file__)
 # Lista los archivos en el directorio
 if __name__=="__main__":
     moonmake_dir=".moonmake"
-    CPP_VERSION="20"
+    CPP_VERSION="2b"
     INCLUDE=f"{mmake.join_with_flag([join(".",moonmake_dir,"dependencies","headers")],"-I")} -I{join(dir_path,"src","include")}"
     FLAGS=f"-Wall -Wextra -std=c++{CPP_VERSION}"
     LINK=f"{mmake.join_with_flag([join(moonmake_dir,"dependencies","lib")],"-L")} -L{join(dir_path,moonmake_dir,"lib")}"
@@ -13,7 +13,7 @@ if __name__=="__main__":
     main=mmake.Builder()
     static_a_files=mmake.discover(join(".",moonmake_dir,"dependencies","lib"),".a")
     STATIC_LIBRARY=" ".join([f"-l{a.replace("lib","").replace(".a","")}" for a in static_a_files])
-
+    headers=mmake.discover(join(dir_path,"src","include"),".h++")
     target_files=list([f for f in  mmake.discover(join(dir_path,"src","target"),".cpp")])
     target_obj=mmake.change_extension(target_files,join(dir_path,moonmake_dir,"obj","target"),old=".cpp",new=".o")
     target_bin=mmake.change_extension(target_files,join(dir_path,moonmake_dir,"bin"),old=".cpp",new=extension)

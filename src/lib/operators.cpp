@@ -27,8 +27,11 @@ Matrix &Matrix::operator=(const Matrix &other)
 {
     if (this != &other)
     {
-
-        this->delete_data();
+        for(int i = 0; i < this->height; i++)
+        {
+            delete[] this->data[i];
+        }
+        delete[] this->data;
         // Copiar nuevas dimensiones
         this->height = other.height;
         this->width = other.width;
@@ -44,43 +47,85 @@ Matrix &Matrix::operator=(const Matrix &other)
     }
     return *this;
 }
-Matrix Matrix::operator*(const float scalar) const
+ Matrix Matrix::operator*(const float scalar) const
 {
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x * scalar; }, *this);
+    Matrix result(this->height, this->width);
+    auto  f= [scalar](float x, float ){ return x* scalar; };
+    ITER_THROUGH_MATRIX(result, *this, *this, f);
+    return result;
 }
-Matrix Matrix::operator/(const float scalar) const
+ Matrix Matrix::operator/(const float scalar) const
 {
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x / scalar; }, *this);
+    Matrix result(this->height, this->width);
+    auto  f= [scalar](float x, float ){ return x/ scalar; };
+    ITER_THROUGH_MATRIX(result, *this, *this, f);
+    return result;
 };
-Matrix Matrix::operator+(const float scalar) const
+ Matrix Matrix::operator+(const float scalar) const
 {
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x + scalar; }, *this);
+   
+    Matrix result(this->height, this->width);
+    auto  f= [scalar](float x, float ){ return x + scalar; };
+    ITER_THROUGH_MATRIX(result, *this, *this, f);
+    return result;
 }
-Matrix Matrix::operator-(const float scalar) const
+ Matrix Matrix::operator-(const float scalar) const
 {
-    return this->iter_through_matrix([scalar](float x, float)
-                                     { return x - scalar; }, *this);
+   
+    Matrix result(this->height, this->width);
+    auto  f= [scalar](float x, float ){ return x - scalar; };
+    ITER_THROUGH_MATRIX(result, *this, *this, f);
+    return result;
 }
-Matrix Matrix::operator+(const Matrix &m) const
+ Matrix Matrix::operator+(const Matrix &m) const
 {
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x + y; }, m);
+    if(this->height != m.height || this->width != m.width)
+    {
+        throw "Matrix dimensions must be equal";
+    }
+    Matrix result(this->height, this->width);
+    auto  f= [](float x, float y){ return x + y; };
+    ITER_THROUGH_MATRIX(result, *this, m, f);
+    return result;
+ 
 }
 
-Matrix Matrix::operator-(const Matrix &m) const
+ Matrix Matrix::operator-(const Matrix &m) const
 {
-    return this->iter_through_matrix([](float x, float y)
-                                     { return x - y; }, m);
+    if(this->height != m.height || this->width != m.width)
+    {
+        throw "Matrix dimensions must be equal";
+    }
+    Matrix result(this->height, this->width);
+    auto  f= [](float x, float y){ return x - y; };
+    ITER_THROUGH_MATRIX(result, *this, m, f);
+    return result;
 }
-Matrix Matrix::operator*(const Matrix &m) const
+ Matrix Matrix::operator*(const Matrix &m) const
 {
     return this->stressen_dot(m);
 }
 
-
+bool Matrix::operator==(const Matrix &m) const{
+    if (this->height != m.height || this->width != m.width)
+    {
+        return false;
+    }
+    for (int i = 0; i < this->height; i++)
+    {
+        for (int j = 0; j < this->width; j++)
+        {
+            if (this->data[i][j] != m.data[i][j])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool Matrix::operator!=(const Matrix &m) const{
+    return !(*this == m);
+}
 
 std::ostream &operator<<(std::ostream &os, Matrix m)
 {
