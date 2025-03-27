@@ -11,12 +11,9 @@ Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, con
     }
 
     Matrix new_matrix(this->height, this->width);
-    for (size_t i = 0; i < this->height; i++)
+    for (size_t i = 0; i < this->height * this->width; i++)
     {
-        for (size_t j = 0; j < this->width; j++)
-        {
-            new_matrix.data[i][j] = f(this->get(i, j), m2.get(i, j));
-        }
+        new_matrix.data[i] = f(this->data[i], m2.data[i]);
     }
 
     return new_matrix;
@@ -28,14 +25,14 @@ void Matrix::fill_rand()
     {
         for (size_t j = 0; j < this->width; j++)
         {
-            this->data[i][j] = (rand() % 100) / 100.0;
+            this->data[i * this->width + j] = (rand() % 100) / 100.0;
         }
     }
 }
 // this will add new columns and rows to the matrix
 Matrix Matrix::padding(size_t h_pad, size_t w_pad) const
 {
-   
+
     if (h_pad == 0 && w_pad == 0)
     {
         return *this;
@@ -45,7 +42,7 @@ Matrix Matrix::padding(size_t h_pad, size_t w_pad) const
     {
         for (size_t j = 0; j < this->width; j++)
         {
-            m.data[i][j] = this->data[i][j];
+            m.data[i * m.width + j] = this->get(i, j);
         }
     }
     return m;
@@ -65,7 +62,7 @@ Matrix Matrix::slice(size_t y1, size_t y2, size_t x1, size_t x2) const
     {
         for (size_t j = 0; j < new_width; j++)
         {
-            m.data[i][j] = this->data[i + y1][j + x1];
+            m.data[i * m.width + j] = this->get(i + y1, j + x1);
         }
     }
     return m;
@@ -78,7 +75,7 @@ Matrix Matrix::transpose() const
     {
         for (size_t j = 0; j < this->width; j++)
         {
-            m.data[j][i] = this->data[i][j];
+            m.data[j * m.width + i] = this->get(i, j);
         }
     }
     return m;
@@ -91,7 +88,7 @@ float Matrix::sum() const
     {
         for (size_t j = 0; j < this->width; j++)
         {
-            sum += this->data[i][j];
+            sum += this->get(i, j);
         }
     }
     return sum;

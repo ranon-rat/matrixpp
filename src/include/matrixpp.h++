@@ -8,13 +8,11 @@
 #include <functional>
 #include <memory>
 
-#define ITER_THROUGH_MATRIXPP(result, A, B, func)                       \
-    for (size_t i = 0; i < (A).height; i++)                             \
-    {                                                                   \
-        for (size_t j = 0; j < (A).width; j++)                          \
-        {                                                               \
-            (result).data[i][j] = (func)((A).get(i, j), (B).get(i, j)); \
-        }                                                               \
+#define ITER_THROUGH_MATRIXPP(result, A, B, func)            \
+    for (size_t i = 0; i < (A).height * (A).width; i++)      \
+    {                                                        \
+                                                             \
+        (result).data[i] = (func)((A).data[i], (B).data[i]); \
     }
 
 #define STRASSEN_SPLITPP(a11, a12, a21, a22, matrix, half_height, half_width) \
@@ -41,8 +39,7 @@ public:
     size_t height = 0;
     size_t width = 0;
 
-    using MatrixppDataRow = std::unique_ptr<float[]>;  
-    std::unique_ptr<MatrixppDataRow[]> data=nullptr;
+    std::unique_ptr<float[]> data = nullptr;
 
 public:
     Matrix() {};
@@ -50,7 +47,7 @@ public:
     // copy constructor
     Matrix(const Matrix &other);
 
-      Matrix randomized(size_t h, size_t w);
+    Matrix randomized(size_t h, size_t w);
     void fill_rand();
     std::ostream &show(std::ostream &os)
     {
@@ -59,7 +56,7 @@ public:
             os << "| ";
             for (size_t j = 0; j < this->width; j++)
             {
-                os << std::format("{0:.2f} | ", this->data[i][j]);
+                os << std::format("{0:.2f} | ", this->data[i * this->width + j]);
             }
             os << "\n";
         }
@@ -72,7 +69,7 @@ public:
     };
     float get(size_t y, size_t x) const
     {
-        return this->data[y][x];
+        return this->data[y * this->width + x];
     }
 
     Matrix slice(size_t y1, size_t y2, size_t x1, size_t x2) const;

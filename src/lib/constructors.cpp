@@ -3,23 +3,17 @@
 
 Matrix::Matrix(size_t h, size_t w) : height(h), width(w)
 {
-    this->data = std::make_unique<Matrix::MatrixppDataRow[]>(h);
-    for (size_t i = 0; i < h; i++)
-    {
-        this->data[i] = std::make_unique<float[]>(w);
-    }
+    this->data = std::make_unique<float[]>(h * w);
+    std::fill_n(this->data.get(), h * w, 0);
 }
 
 Matrix::Matrix(const Matrix &other) : height(other.height), width(other.width)
 {
-    this->data = std::make_unique<Matrix::MatrixppDataRow[]>(other.height); 
-    for (size_t i = 0; i < height; i++)
+    this->data = std::make_unique<float[]>(other.height * other.width);
+    for (size_t i = 0; i < height * width; i++)
     {
-        this->data[i] = std::make_unique<float[]>(width);
-        for (size_t j = 0; j < width; j++)
-        {
-            this->data[i][j] = other.data[i][j]; // Copia profunda
-        }
+
+        this->data[i] = other.data[i]; // Copia profunda
     }
 }
 
@@ -32,19 +26,14 @@ Matrix &Matrix::operator=(const Matrix &other)
         // Copiar nuevas dimensiones
         this->height = other.height;
         this->width = other.width;
-        this->data = std::make_unique<Matrix::MatrixppDataRow[]>(height);
-        for (size_t i = 0; i < this->height; i++)
+        this->data = std::make_unique<float[]>(this->height * this->width);
+        for (size_t i = 0; i < this->height * this->width; i++)
         {
-            this->data[i] = std::make_unique<float[]> (width);
-            for (size_t j = 0; j < width; j++)
-            {
-                this->data[i][j] = other.data[i][j]; // Copia profunda
-            }
-        }
 
+            this->data[i] = other.data[i]; // Copia profunda
+        }
     }
-    
-    
+
     return *this;
 }
 Matrix Matrix::randomized(size_t h, size_t w)

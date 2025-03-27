@@ -10,9 +10,9 @@ std::chrono::milliseconds now()
 }
 void a()
 {
-    for (int i = 256; i < 1500; i++)
+    for (int i = 1; i < 14; i++)
     {
-        int d =i;
+        int d =std::pow(2,i);
 
         std::cout << "dimension: " << d <<"x"<<d<< "\n";
         Matrix m(d, d);
@@ -32,7 +32,7 @@ void a()
         std::cout << "difference: " << multiplication_brute.sum() - multiplication_stressen.sum() << "\n";
         std::cout << "strassen/brute force: " << (stressen_time) / (brute_force_time * 1.0 + 0.1) << "\n\n";
      
-        // std::cin.get();
+        std::cin.get();
 
     }
 }

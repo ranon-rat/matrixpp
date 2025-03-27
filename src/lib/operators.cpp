@@ -72,15 +72,14 @@ bool Matrix::operator==(const Matrix &m) const
     {
         return false;
     }
-    for (size_t i = 0; i < this->height; i++)
+    for (size_t i = 0; i < this->height*this->width; i++)
     {
-        for (size_t j = 0; j < this->width; j++)
-        {
-            if (this->data[i][j] != m.data[i][j])
+        
+            if (this->data[i] != m.data[i])
             {
                 return false;
             }
-        }
+        
     }
     return true;
 }
