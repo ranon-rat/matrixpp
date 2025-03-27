@@ -6,6 +6,8 @@
 #include <format>
 #include <tuple>
 #include <functional>
+#include <memory>
+
 #define ITER_THROUGH_MATRIXPP(result, A, B, func)                       \
     for (size_t i = 0; i < (A).height; i++)                             \
     {                                                                   \
@@ -25,28 +27,22 @@
     (a21) = (matrix).slice((half_height), (matrix).height, 0, (half_width));  \
     (a22) = (matrix).slice((half_height), (matrix).height, (half_width), (matrix).width);
 
-#define DELETE_DATA_MATRIXPP(matrix)                      \
-    do                                                    \
-    {                                                     \
-        if (data)                                         \
-        {                                                 \
-            for (size_t i = 0; i < (matrix)->height; i++) \
-            {                                             \
-                                                          \
-                delete[] (matrix)->data[i];               \
-                (matrix)->data[i] = nullptr;              \
-            }                                             \
-            delete[] (matrix)->data;                      \
-            data = nullptr;                               \
-        }                                                 \
+#define DELETE_DATA_MATRIXPP(matrix) \
+    do                               \
+    {                                \
+        if ((matrix)->data)          \
+        {                            \
+            (matrix)->data.reset();  \
+        }                            \
     } while (0)
-
 class Matrix
 {
 public:
     size_t height = 0;
     size_t width = 0;
-    float **data = nullptr;
+
+    using MatrixppDataRow = std::unique_ptr<float[]>;  
+    std::unique_ptr<MatrixppDataRow[]> data=nullptr;
 
 public:
     Matrix() {};
@@ -54,11 +50,7 @@ public:
     // copy constructor
     Matrix(const Matrix &other);
 
-    ~Matrix()
-    {
-        DELETE_DATA_MATRIXPP(this);
-    };
-    Matrix randomized(size_t h, size_t w);
+      Matrix randomized(size_t h, size_t w);
     void fill_rand();
     std::ostream &show(std::ostream &os)
     {
