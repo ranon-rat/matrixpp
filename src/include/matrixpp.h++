@@ -39,8 +39,7 @@
             delete[] data;                   \
             data = nullptr;                  \
         }                                    \
-    }                                        \
-    while (0)
+    } while (0)
 
 class Matrix
 {

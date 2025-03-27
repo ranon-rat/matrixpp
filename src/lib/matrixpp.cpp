@@ -17,7 +17,7 @@ Matrix Matrix::brute_force_dot(const Matrix &m) const
 
         throw "Invalid matrix dimensions";
     }
-    
+
     Matrix new_matrix(this->height, m.width);
     for (int i = 0; i < this->height; i++)
     {
@@ -57,19 +57,17 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
     auto dot_matrix1 = this->padding(this->height % 2 == 0 ? 0 : 1, this->width % 2 == 0 ? 0 : 1);
     auto dot_matrix2 = m.padding(m.height % 2 == 0 ? 0 : 1, m.width % 2 == 0 ? 0 : 1);
     // first we need to divide the matrix into 4 parts
-    Matrix a11(0,0), a12(0,0), a21(0,0), a22(0,0);
-    Matrix b11(0,0), b12(0,0), b21(0,0), b22(0,0);
+    Matrix a11(0, 0), a12(0, 0), a21(0, 0), a22(0, 0);
+    Matrix b11(0, 0), b12(0, 0), b21(0, 0), b22(0, 0);
 
+    int half_width_M = dot_matrix1.width / 2;
+    int half_height_M = dot_matrix1.height / 2;
+    STRASSEN_SPLITPP(a11, a12, a21, a22, dot_matrix1, half_height_M, half_width_M);
+    half_width_M = dot_matrix2.width / 2;
 
-    int half_width_M=dot_matrix1.width/2;
-    int half_height_M=dot_matrix1.height/2;
-    STRASSEN_SPLITPP(a11,a12,a21,a22,dot_matrix1,half_height_M,half_width_M);
-    half_width_M=dot_matrix2.width/2;
+    half_height_M = dot_matrix2.height / 2;
+    STRASSEN_SPLITPP(b11, b12, b21, b22, dot_matrix2, half_height_M, half_width_M);
 
-    half_height_M=dot_matrix2.height/2;
-    STRASSEN_SPLITPP(b11,b12,b21,b22,dot_matrix2,half_height_M,half_width_M);
-
- 
     Matrix p1 = (a11 + a22) * (b11 + b22);
     Matrix p2 = (a21 + a22) * b11;
     Matrix p3 = a11 * (b12 - b22);

@@ -10,7 +10,7 @@ Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, con
         throw "Matrix dimensions must be equal";
     }
 
-    Matrix new_matrix(this->height, this->width); 
+    Matrix new_matrix(this->height, this->width);
     for (int i = 0; i < this->height; i++)
     {
         for (int j = 0; j < this->width; j++)
@@ -19,7 +19,7 @@ Matrix Matrix::iter_through_matrix(std::function<float(float x, float y)> f, con
         }
     }
 
-    return new_matrix; 
+    return new_matrix;
 }
 // this will fill the matrix with random numbers
 void Matrix::fill_rand()
@@ -87,13 +87,15 @@ Matrix Matrix::transpose() const
     return m;
 }
 // this will sum all the elements of the matrix
-float Matrix::sum()const{
-    float sum=0;
-    for(int i=0;i<this->height;i++){
-        for(int j=0;j<this->width;j++){
-            sum+=this->data[i][j];
+float Matrix::sum() const
+{
+    float sum = 0;
+    for (int i = 0; i < this->height; i++)
+    {
+        for (int j = 0; j < this->width; j++)
+        {
+            sum += this->data[i][j];
         }
     }
     return sum;
-
 }

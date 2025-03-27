@@ -27,9 +27,8 @@ Matrix &Matrix::operator=(const Matrix &other)
 {
     if (this != &other)
     {
-       
-        DELETE_DATA_MATRIXPP(this); 
-      
+
+        DELETE_DATA_MATRIXPP(this);
 
         // Copiar nuevas dimensiones
         this->height = other.height;
