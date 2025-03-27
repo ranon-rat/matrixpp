@@ -1,11 +1,11 @@
 #include "matrixpp.h++"
 
-Matrix::Matrix(int h, int w)
+Matrix::Matrix(size_t h, size_t w)
 {
     this->width = w;
     this->height = h;
     this->data = new float *[h];
-    for (int i = 0; i < h; i++)
+    for (size_t i = 0; i < h; i++)
     {
         this->data[i] = new float[w]{0};
     }
@@ -13,10 +13,10 @@ Matrix::Matrix(int h, int w)
 Matrix::Matrix(const Matrix &other) : height(other.height), width(other.width)
 {
     data = new float *[height];
-    for (int i = 0; i < height; i++)
+    for (size_t i = 0; i < height; i++)
     {
         data[i] = new float[width]{0};
-        for (int j = 0; j < width; j++)
+        for (size_t j = 0; j < width; j++)
         {
             data[i][j] = other.data[i][j]; // Copia profunda
         }
@@ -34,10 +34,10 @@ Matrix &Matrix::operator=(const Matrix &other)
         this->height = other.height;
         this->width = other.width;
         this->data = new float *[height];
-        for (int i = 0; i < height; i++)
+        for (size_t i = 0; i < this->height; i++)
         {
             this->data[i] = new float[width]{0};
-            for (int j = 0; j < width; j++)
+            for (size_t j = 0; j < width; j++)
             {
                 this->data[i][j] = other.data[i][j]; // Copia profunda
             }
@@ -46,7 +46,7 @@ Matrix &Matrix::operator=(const Matrix &other)
     return *this;
 }
 
-Matrix Matrix::randomized(int h, int w)
+Matrix Matrix::randomized(size_t h, size_t w)
 {
     Matrix m(h, w);
     m.fill_rand();

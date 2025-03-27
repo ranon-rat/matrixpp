@@ -27,14 +27,14 @@ void a()
         auto initial_t2 = now();
         Matrix multiplication_stressen;
         multiplication_stressen = m.stressen_dot(m2t);
-        std::cout << "finish??";
         auto final_t2 = now();
         auto stressen_time = static_cast<int>((final_t2 - initial_t2).count());
         std::cout << "Time for stressen:   " << final_t2 - initial_t2 << "\n";
         std::cout << "difference: " << multiplication_brute.sum() - multiplication_stressen.sum() << "\n";
         std::cout << "strassen/brute force: " << (stressen_time) / (brute_force_time * 1.0 + 0.1) << "\n\n";
+        std::cin.get();
+
     }
-    std::cin.get();
 }
 int main()
 {

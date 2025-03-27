@@ -19,12 +19,12 @@ Matrix Matrix::brute_force_dot(const Matrix &m) const
     }
 
     Matrix new_matrix(this->height, m.width);
-    for (int i = 0; i < this->height; i++)
+    for (size_t i = 0; i < this->height; i++)
     {
-        for (int j = 0; j < m.width; j++)
+        for (size_t j = 0; j < m.width; j++)
         {
             float sum = 0;
-            for (int k = 0; k < this->width; k++)
+            for (size_t k = 0; k < this->width; k++)
             {
                 sum += this->data[i][k] * m.data[k][j];
             }
@@ -34,8 +34,8 @@ Matrix Matrix::brute_force_dot(const Matrix &m) const
     return new_matrix;
 }
 
-Matrix Matrix::stressen_dot(const Matrix &m) const
-{ // in case the matrix is too small we can just use brute force
+Matrix Matrix::stressen_dot(const Matrix &m) const{
+ // in case the matrix is too small we can just use brute force
     if (this->height <= 256 || this->width <= 256)
     {
         return this->brute_force_dot(m);
@@ -44,12 +44,12 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
     {
         throw "Invalid matrix dimensions";
     }
-    const int new_height = this->height;
-    const int new_width = m.width;
+    const auto new_height = this->height;
+    const auto new_width = m.width;
     // this is for the product matrix that we are gonna be using
 
-    const int padding_height = new_height + (new_height % 2 == 0 ? 0 : 1);
-    const int padding_width = new_width + (new_width % 2 == 0 ? 0 : 1);
+    const auto padding_height = new_height + (new_height % 2 == 0 ? 0 : 1);
+    const auto padding_width = new_width + (new_width % 2 == 0 ? 0 : 1);
 
     // we will be using this for the result :D
     Matrix product_matrix(padding_height, padding_width);
@@ -85,12 +85,12 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
     // c*f+d*h
     Matrix c22 = p1 - p2 + p3 + p6;
     // then we need to merge the 4 parts into the final matrix
-    const int half_height = padding_height / 2;
-    const int half_width = padding_width / 2;
+    const auto half_height = padding_height / 2;
+    const auto half_width = padding_width / 2;
 
-    for (int i = 0; i < new_height; i++)
+    for (size_t i = 0; i < new_height; i++)
     {
-        for (int j = 0; j < new_width; j++)
+        for (size_t j = 0; j < new_width; j++)
         {
             if (i < half_height && j < half_width)
             {
@@ -119,4 +119,5 @@ Matrix Matrix::stressen_dot(const Matrix &m) const
         return product_matrix;
     }
     return product_matrix.slice(0, new_height, 0, new_width);
+
 }

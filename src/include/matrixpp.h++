@@ -7,9 +7,9 @@
 #include <tuple>
 #include <functional>
 #define ITER_THROUGH_MATRIXPP(result, A, B, func)                       \
-    for (int i = 0; i < (A).height; i++)                                \
+    for (size_t i = 0; i < (A).height; i++)                             \
     {                                                                   \
-        for (int j = 0; j < (A).width; j++)                             \
+        for (size_t j = 0; j < (A).width; j++)                          \
         {                                                               \
             (result).data[i][j] = (func)((A).get(i, j), (B).get(i, j)); \
         }                                                               \
@@ -25,32 +25,32 @@
     (a21) = (matrix).slice((half_height), (matrix).height, 0, (half_width));  \
     (a22) = (matrix).slice((half_height), (matrix).height, (half_width), (matrix).width);
 
-#define DELETE_DATA_MATRIXPP(matrix)         \
-    do                                       \
-    {                                        \
-        if (data)                            \
-        {                                    \
-            for (int i = 0; i < height; i++) \
-            {                                \
-                                             \
-                delete[] data[i];            \
-                data[i] = nullptr;           \
-            }                                \
-            delete[] data;                   \
-            data = nullptr;                  \
-        }                                    \
+#define DELETE_DATA_MATRIXPP(matrix)                      \
+    do                                                    \
+    {                                                     \
+        if (data)                                         \
+        {                                                 \
+            for (size_t i = 0; i < (matrix)->height; i++) \
+            {                                             \
+                                                          \
+                delete[] (matrix)->data[i];               \
+                (matrix)->data[i] = nullptr;              \
+            }                                             \
+            delete[] (matrix)->data;                      \
+            data = nullptr;                               \
+        }                                                 \
     } while (0)
 
 class Matrix
 {
 public:
-    int height = 0;
-    int width = 0;
+    size_t height = 0;
+    size_t width = 0;
     float **data = nullptr;
 
 public:
     Matrix() {};
-    Matrix(int h, int w);
+    Matrix(size_t h, size_t w);
     // copy constructor
     Matrix(const Matrix &other);
 
@@ -58,14 +58,14 @@ public:
     {
         DELETE_DATA_MATRIXPP(this);
     };
-    Matrix randomized(int h, int w);
+    Matrix randomized(size_t h, size_t w);
     void fill_rand();
     std::ostream &show(std::ostream &os)
     {
-        for (int i = 0; i < this->height; i++)
+        for (size_t i = 0; i < this->height; i++)
         {
             os << "| ";
-            for (int j = 0; j < this->width; j++)
+            for (size_t j = 0; j < this->width; j++)
             {
                 os << std::format("{0:.2f} | ", this->data[i][j]);
             }
@@ -78,14 +78,14 @@ public:
     {
         this->show(std::cout);
     };
-    float get(int y, int x) const
+    float get(size_t y, size_t x) const
     {
         return this->data[y][x];
     }
 
-    Matrix slice(int y1, int y2, int x1, int x2) const;
+    Matrix slice(size_t y1, size_t y2, size_t x1, size_t x2) const;
     // this will add a new column or row depending of what you want :)
-    Matrix padding(int h_pad, int w_pad) const;
+    Matrix padding(size_t h_pad, size_t w_pad) const;
     Matrix transpose() const;
     // so these are matrix multiplication functions
     Matrix brute_force_dot(const Matrix &m) const;
