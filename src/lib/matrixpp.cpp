@@ -2,7 +2,9 @@
 #include <functional>
 #include <iomanip>
 #include <tuple>
+#include <future>
 #include "matrixpp.h++"
+
 
 // stressen algorithm mfs i will kill you
 Matrix Matrix::dot(Matrix &m) const
@@ -68,22 +70,29 @@ Matrix Matrix::stressen_dot(const Matrix &m) const{
     half_height_M = dot_matrix2.height / 2;
     STRASSEN_SPLITPP(b11, b12, b21, b22, dot_matrix2, half_height_M, half_width_M);
 
-    Matrix p1 = (a11 + a22) * (b11 + b22);
-    Matrix p2 = (a21 + a22) * b11;
-    Matrix p3 = a11 * (b12 - b22);
-    Matrix p4 = a22 * (b21 - b11);
-    Matrix p5 = (a11 + a12) * b22;
-    Matrix p6 = (a21 - a11) * (b11 + b21);
-    Matrix p7 = (a12 - a22) * (b21 + b22);
+    std::function<Matrix()> p1 =[&a11,&a22,&b11,&b22]() {return (a11 + a22) * (b11 + b22);};
+    std::function<Matrix()> p2 =[&a21,&a22,&b11]() {return (a21 + a22) * b11;};
+    std::function<Matrix()> p3 =[&a11,&b12,&b22]() {return a11 * (b12 - b22);};
+    std::function<Matrix()> p4 =[&a22,&b21,&b11]() {return a22 * (b21 - b11);};
+    std::function<Matrix()> p5 =[&a11,&a12,&b22]() {return (a11 + a12) * b22;};
+    std::function<Matrix()> p6 =[&a21,&a11,&b11,&b21]() {return (a21 - a11) * (b11 + b21);};
+    std::function<Matrix()> p7 =[&a12,&a22,&b21,&b22]() {return (a12 - a22) * (b21 + b22);};
     // then we need to calculate the 4 additions
     // a*e+b*g
-    Matrix c11 = p1 + p4 - p5 + p7;
+
+
+    std::future<Matrix> c11_fut =std::async(std::launch::async, [p1,p4,p5,p7](){return p1() + p4() - p5() + p7();});
+    std::future<Matrix> c12_fut =std::async(std::launch::async, [p3,p5](){return p3() + p5();});
+    std::future<Matrix> c21_fut =std::async(std::launch::async, [p2,p4](){return p2() + p4();});
+    std::future<Matrix> c22_fut =std::async(std::launch::async, [p1,p2,p3,p6](){return p1() - p2() + p3() + p6();});
+
+    Matrix c11 = c11_fut.get();
     // a*f+b*h
-    Matrix c12 = p3 + p5;
+    Matrix c12 = c12_fut.get();
     // c*e+d*g
-    Matrix c21 = p2 + p4;
+    Matrix c21 = c21_fut.get();
     // c*f+d*h
-    Matrix c22 = p1 - p2 + p3 + p6;
+    Matrix c22 = c22_fut.get();
     // then we need to merge the 4 parts into the final matrix
     const auto half_height = padding_height / 2;
     const auto half_width = padding_width / 2;
